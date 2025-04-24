@@ -71,7 +71,7 @@ const App:React.FC = () => {
             type="text"
             value={input}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Enter a todo..."
             className="flex-1"
             aria-label="New todo input"
