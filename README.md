@@ -4,7 +4,7 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)
 ![Vite](https://img.shields.io/badge/Vite-6.0-purple)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-cyan)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o--mini-green)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4.1--nano-green)
 
 A modern Todo application enhanced with AI capabilities to help you manage your tasks more effectively. This app combines the simplicity of a traditional Todo list with powerful AI features to provide task suggestions and insights.
 
