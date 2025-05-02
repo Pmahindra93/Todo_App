@@ -44,7 +44,9 @@ const handleClassify: RequestHandler = async (req, res) => {
       return;
     }
 
+    console.log('Classifying task:', task);
     const size = await classifyTaskSize(task);
+    console.log('Classification result:', size);
     res.json({ size });
   } catch (error) {
     console.error('Error classifying task:', error);
@@ -61,8 +63,10 @@ const handleMeme: RequestHandler = async (req, res) => {
       return;
     }
 
-    const { imageUrl } = await generateMemeSuggestion(task);
-    res.json({ imageUrl });
+    console.log('Generating meme for task:', task);
+    const result = await generateMemeSuggestion(task);
+    console.log('Meme result:', result);
+    res.json({ imageUrl: result.imageUrl });
   } catch (error) {
     console.error('Error generating meme:', error);
     res.status(500).json({ error: 'Failed to generate meme' });
@@ -73,7 +77,6 @@ app.post('/api/suggestion', handleSuggestion);
 app.post('/api/classify', handleClassify);
 app.post('/api/meme', handleMeme);
 
-// Start the server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

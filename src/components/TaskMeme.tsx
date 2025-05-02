@@ -13,11 +13,14 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
 
   useEffect(() => {
     const checkTaskSize = async () => {
+      if (!task || task.trim() === '') return;
+      
       try {
         setLoading(true);
         setError(null);
         
         // First classify the task
+        console.log('Sending task to classify:', task);
         const classifyResponse = await fetch('http://localhost:3001/api/classify', {
           method: 'POST',
           headers: {
@@ -26,14 +29,19 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
           body: JSON.stringify({ task }),
         });
         
-        if (!classifyResponse.ok) throw new Error('Failed to classify task');
+        if (!classifyResponse.ok) {
+          console.error('Classification response not OK:', await classifyResponse.text());
+          throw new Error('Failed to classify task');
+        }
         
         const classification = await classifyResponse.json();
+        console.log('Classification result:', classification);
         
-        if (classification.size.isLarge) {
+        if (classification.size && classification.size.isLarge) {
           setIsLargeTask(true);
           
           // Then generate a meme image if it's a large task
+          console.log('Generating meme for large task:', task);
           const memeResponse = await fetch('http://localhost:3001/api/meme', {
             method: 'POST',
             headers: {
@@ -42,17 +50,27 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
             body: JSON.stringify({ task }),
           });
           
-          if (!memeResponse.ok) throw new Error('Failed to generate meme');
+          if (!memeResponse.ok) {
+            console.error('Meme response not OK:', await memeResponse.text());
+            throw new Error('Failed to generate meme');
+          }
           
           const memeData = await memeResponse.json();
-          setImageUrl(memeData.imageUrl);
+          console.log('Meme data received:', memeData);
+          
+          if (memeData && memeData.imageUrl) {
+            setImageUrl(memeData.imageUrl);
+          } else {
+            throw new Error('No image URL in response');
+          }
         } else {
           setIsLargeTask(false);
           setImageUrl(null);
         }
       } catch (err) {
-        console.error('Error:', err);
+        console.error('Error in TaskMeme:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
+        setIsLargeTask(false);
       } finally {
         setLoading(false);
       }
@@ -61,7 +79,7 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
     checkTaskSize();
   }, [task]);
 
-  if (!isLargeTask) return null;
+  if (!isLargeTask && !loading) return null;
 
   return (
     <div className="mt-2">
@@ -69,7 +87,7 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
         <Card className="p-4">
           <div className="flex items-center justify-center space-x-2">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-            <span>Generating meme...</span>
+            <span>Analyzing task...</span>
           </div>
         </Card>
       ) : error ? (
@@ -85,6 +103,10 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
                 src={imageUrl} 
                 alt="Task meme" 
                 className="object-cover w-full h-full"
+                onError={() => {
+                  console.error('Image failed to load:', imageUrl);
+                  setError('Failed to load image');
+                }}
               />
             </div>
           </div>

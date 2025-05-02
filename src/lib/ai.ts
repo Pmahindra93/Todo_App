@@ -1,15 +1,16 @@
-import OpenAI from 'openai';
 import { experimental_generateImage as generateImage } from 'ai';
+import OpenAI from 'openai';
+import { openai } from '@ai-sdk/openai';
 
 // Initialize the OpenAI client
-const openai = new OpenAI({
+const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || '',
 });
 
 // Function to generate task suggestions
 export async function generateTaskSuggestion(task: string): Promise<string> {
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openaiClient.chat.completions.create({
       model: 'gpt-4.1-nano-2025-04-14',
       messages: [
         {
@@ -36,7 +37,7 @@ export async function generateTaskSuggestion(task: string): Promise<string> {
 // Function to classify tasks and determine if they are "very large"
 export async function classifyTaskSize(task: string): Promise<{ isLarge: boolean; reason: string }> {
   try {
-    const response = await openai.chat.completions.create({
+    const response = await openaiClient.chat.completions.create({
       model: 'gpt-4.1-nano-2025-04-14',
       messages: [
         {
@@ -65,7 +66,7 @@ export async function classifyTaskSize(task: string): Promise<{ isLarge: boolean
 export async function generateMemeSuggestion(task: string): Promise<{ imageUrl: string }> {
   try {
     // First, generate a creative meme prompt based on the task
-    const promptResponse = await openai.chat.completions.create({
+    const promptResponse = await openaiClient.chat.completions.create({
       model: 'gpt-4.1-nano-2025-04-14',
       messages: [
         {
@@ -83,13 +84,16 @@ export async function generateMemeSuggestion(task: string): Promise<{ imageUrl: 
 
     const memePrompt = promptResponse.choices[0].message.content || 'A developer looking overwhelmed at their computer';
 
-    // Generate the actual image using gpt-image-1
-    const { image } = await generateImage({
-      model: openai.image('gpt-image-1'),
+    // Use OpenAI directly for image generation since Vercel AI SDK is causing type issues
+    const imageResponse = await openaiClient.images.generate({
+      model: "gpt-image-1",
       prompt: memePrompt,
+      n: 1,
+      size: "1024x1024",
     });
 
-    return { imageUrl: image };
+    const imageUrl = imageResponse.data[0].url;
+    return { imageUrl };
   } catch (error) {
     console.error('Error generating meme image:', error);
     throw error;
