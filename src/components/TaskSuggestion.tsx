@@ -22,9 +22,12 @@ export const TaskSuggestion: React.FC<TaskSuggestionProps> = ({ task, children }
     const fetchSuggestion = async () => {
       if (!task || !isHovering) return;
       
+      // Set loading state immediately
       setIsLoading(true);
       setSuggestion('');
       setError(null);
+      
+      console.log('Fetching suggestion for:', task);
       
       try {
         const response = await fetch('http://localhost:3001/api/suggestion', {
@@ -40,7 +43,8 @@ export const TaskSuggestion: React.FC<TaskSuggestionProps> = ({ task, children }
         }
         
         const data = await response.json();
-        setSuggestion(data.text || 'No suggestion available');
+        console.log('Received suggestion:', data);
+        setSuggestion(data.suggestion || 'No suggestion available');
       } catch (err) {
         console.error('Error fetching suggestion:', err);
         setError('Failed to get suggestion');
@@ -50,7 +54,7 @@ export const TaskSuggestion: React.FC<TaskSuggestionProps> = ({ task, children }
     };
     
     // When the user hovers and we don't have a suggestion yet, fetch it
-    if (isHovering && !suggestion && !isLoading) {
+    if (isHovering && (!suggestion || suggestion === '') && !isLoading) {
       fetchSuggestion();
     }
   }, [isHovering, suggestion, isLoading, task]);
@@ -63,6 +67,9 @@ export const TaskSuggestion: React.FC<TaskSuggestionProps> = ({ task, children }
     setIsHovering(false);
   };
 
+  // Debug logging
+  console.log('Render state:', { isHovering, isLoading, suggestion, error });
+  
   return (
     <TooltipProvider>
       <TooltipRoot open={isHovering}>
@@ -81,11 +88,16 @@ export const TaskSuggestion: React.FC<TaskSuggestionProps> = ({ task, children }
               <div className="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
               <span>Thinking...</span>
             </div>
+          ) : suggestion ? (
+            <div>
+              <h4 className="font-semibold mb-1">How to get started:</h4>
+              <p>{suggestion}</p>
+              {error && <p className="text-red-500 text-xs mt-1">Error: {error}</p>}
+            </div>
           ) : (
             <div>
               <h4 className="font-semibold mb-1">How to get started:</h4>
-              <p>{suggestion || "Hover to get a suggestion"}</p>
-              {error && <p className="text-red-500 text-xs mt-1">Error: {error}</p>}
+              <p>Hover to get a suggestion</p>
             </div>
           )}
         </TooltipContent>

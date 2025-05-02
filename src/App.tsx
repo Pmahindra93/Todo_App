@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
+import { TaskSuggestion } from "@/components/TaskSuggestion";
 
 const App:React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>(() => {
@@ -82,35 +83,37 @@ const App:React.FC = () => {
         </div>
         <div className="space-y-3" role="list">
           {todos.map((item) => (
-            <Card key={item.id} className="p-4" role="listitem">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`todo-${item.id}`}
-                    checked={item.completed}
-                    onCheckedChange={() => handleToggleCompletion(item.id)}
-                    aria-label={`Mark ${item.description} as ${item.completed ? 'incomplete' : 'complete'}`}
-                  />
-                  <label
-                    htmlFor={`todo-${item.id}`}
-                    className={`${
-                      item.completed ? 'line-through text-muted-foreground' : 'text-foreground'
-                    } text-sm flex-1 cursor-pointer`}
+            <TaskSuggestion key={item.id} task={item.description}>
+              <Card className="p-4" role="listitem">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`todo-${item.id}`}
+                      checked={item.completed}
+                      onCheckedChange={() => handleToggleCompletion(item.id)}
+                      aria-label={`Mark ${item.description} as ${item.completed ? 'incomplete' : 'complete'}`}
+                    />
+                    <label
+                      htmlFor={`todo-${item.id}`}
+                      className={`${
+                        item.completed ? 'line-through text-muted-foreground' : 'text-foreground'
+                      } text-sm flex-1 cursor-pointer`}
+                    >
+                      {item.description}
+                    </label>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleDelete(item.id)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    aria-label={`Delete ${item.description}`}
                   >
-                    {item.description}
-                  </label>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDelete(item.id)}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  aria-label={`Delete ${item.description}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </Card>
+              </Card>
+            </TaskSuggestion>
           ))}
         </div>
       </div>
