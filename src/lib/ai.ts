@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { experimental_generateImage as generateImage } from 'ai';
 
 // Initialize the OpenAI client
 const openai = new OpenAI({
@@ -60,28 +61,37 @@ export async function classifyTaskSize(task: string): Promise<{ isLarge: boolean
   }
 }
 
-// Function to generate a meme description for large tasks
-export async function generateMemeSuggestion(task: string): Promise<string> {
+// Function to generate a meme image for large tasks
+export async function generateMemeSuggestion(task: string): Promise<{ imageUrl: string }> {
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-image-1',
+    // First, generate a creative meme prompt based on the task
+    const promptResponse = await openai.chat.completions.create({
+      model: 'gpt-4.1-nano-2025-04-14',
       messages: [
         {
           role: 'system',
-          content: 'You are a creative assistant that generates humorous memes related to large, complex tasks.'
+          content: 'You are a creative meme generator. Create a funny, relatable prompt for an image that represents the overwhelming feeling of a large task.'
         },
         {
           role: 'user',
-          content: `Generate a funny meme for this large task: "${task}". The description should be brief and humorous.`
+          content: `Create a funny image prompt that represents the overwhelming feeling of this task: "${task}". Make it humorous and relatable to developers/tech workers.`
         }
       ],
       max_tokens: 100,
       temperature: 0.8,
     });
 
-    return response.choices[0].message.content || 'Could not generate a meme suggestion.';
+    const memePrompt = promptResponse.choices[0].message.content || 'A developer looking overwhelmed at their computer';
+
+    // Generate the actual image using gpt-image-1
+    const { image } = await generateImage({
+      model: openai.image('gpt-image-1'),
+      prompt: memePrompt,
+    });
+
+    return { imageUrl: image };
   } catch (error) {
-    console.error('Error generating meme :', error);
-    return 'Could not generate a meme at this time.';
+    console.error('Error generating meme image:', error);
+    throw error;
   }
 }

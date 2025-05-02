@@ -7,7 +7,7 @@ interface TaskMemeProps {
 
 export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
   const [isLargeTask, setIsLargeTask] = useState(false);
-  const [memeText, setMemeText] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,6 +15,7 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
     const checkTaskSize = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // First classify the task
         const classifyResponse = await fetch('http://localhost:3001/api/classify', {
@@ -29,10 +30,10 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
         
         const classification = await classifyResponse.json();
         
-        if (classification.isLarge) {
+        if (classification.size.isLarge) {
           setIsLargeTask(true);
           
-          // Then generate a meme if it's a large task
+          // Then generate a meme image if it's a large task
           const memeResponse = await fetch('http://localhost:3001/api/meme', {
             method: 'POST',
             headers: {
@@ -44,51 +45,51 @@ export const TaskMeme: React.FC<TaskMemeProps> = ({ task }) => {
           if (!memeResponse.ok) throw new Error('Failed to generate meme');
           
           const memeData = await memeResponse.json();
-          setMemeText(memeData.meme);
+          setImageUrl(memeData.imageUrl);
         } else {
           setIsLargeTask(false);
-          setMemeText(null);
+          setImageUrl(null);
         }
       } catch (err) {
-        console.error('Error in task classification:', err);
-        setError('Failed to classify task');
+        console.error('Error:', err);
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
     };
-
-    if (task) {
-      checkTaskSize();
-    }
+    
+    checkTaskSize();
   }, [task]);
 
-  if (loading) {
-    return (
-      <div className="mt-2 flex items-center justify-center p-4">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
-        <span className="ml-2 text-sm text-muted-foreground">Analyzing task complexity...</span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return null; // Don't show anything if there's an error
-  }
-
-  if (!isLargeTask || !memeText) {
-    return null; // Don't show anything if it's not a large task
-  }
+  if (!isLargeTask) return null;
 
   return (
-    <Card className="mt-2 p-4 bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-      <div className="flex flex-col">
-        <div className="text-sm font-medium mb-1 text-amber-800 dark:text-amber-300">
-          This looks like a big task! 
-        </div>
-        <div className="text-sm italic">
-          {memeText}
-        </div>
-      </div>
-    </Card>
+    <div className="mt-2">
+      {loading ? (
+        <Card className="p-4">
+          <div className="flex items-center justify-center space-x-2">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+            <span>Generating meme...</span>
+          </div>
+        </Card>
+      ) : error ? (
+        <Card className="p-4 text-destructive">
+          <p>Failed to generate meme: {error}</p>
+        </Card>
+      ) : imageUrl ? (
+        <Card className="p-4">
+          <div className="space-y-2">
+            <p className="text-sm font-medium">This looks like a big task! Here's a meme to cheer you up:</p>
+            <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+              <img 
+                src={imageUrl} 
+                alt="Task meme" 
+                className="object-cover w-full h-full"
+              />
+            </div>
+          </div>
+        </Card>
+      ) : null}
+    </div>
   );
 };

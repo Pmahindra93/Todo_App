@@ -61,8 +61,8 @@ const handleMeme: RequestHandler = async (req, res) => {
       return;
     }
 
-    const meme = await generateMemeSuggestion(task);
-    res.json({ meme });
+    const { imageUrl } = await generateMemeSuggestion(task);
+    res.json({ imageUrl });
   } catch (error) {
     console.error('Error generating meme:', error);
     res.status(500).json({ error: 'Failed to generate meme' });
