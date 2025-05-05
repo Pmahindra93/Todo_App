@@ -2,9 +2,12 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "allowSyntheticDefaultImports": true
+    "module": "NodeNext", 
+    "moduleResolution": "NodeNext", 
+    "allowSyntheticDefaultImports": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "sourceMap": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["simple-server.ts", "src/lib/ai.ts", "vite.config.ts"]
 }

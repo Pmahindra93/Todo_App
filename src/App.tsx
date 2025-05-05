@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Trash2 } from "lucide-react";
+import { TaskSuggestion } from "@/components/TaskSuggestion";
+import { TaskMeme } from "@/components/TaskMeme";
 
-const App:React.FC = () => {
+const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>(() => {
     const savedTodos = localStorage.getItem('todos');
     return savedTodos ? JSON.parse(savedTodos) : [];
@@ -25,97 +27,95 @@ const App:React.FC = () => {
       localStorage.setItem('todos', JSON.stringify(todos));
       localStorage.setItem('idCounter', JSON.stringify(idCounter));
     } catch (error) {
-      console.error('Error saving data to localStorage:', error);
+      console.error('Error saving to localStorage:', error);
     }
   }, [todos, idCounter]);
 
-  const handleSubmit = () => {
-    if (input.trim()) {
-      const newTodo: Todo = {
-        id: idCounter,
-        description: input.trim(),
-        completed: false
-      };
-      setTodos(prevTodos => [...prevTodos, newTodo]);
-      setIdCounter(prevId => prevId + 1);
-      setInput('');
-    }
+  const addTodo = () => {
+    if (input.trim() === '') return;
+    
+    const newTodo: Todo = {
+      id: idCounter,
+      description: input,
+      completed: false,
+      createdAt: new Date().toISOString()
+    };
+    
+    setTodos([...todos, newTodo]);
+    setIdCounter(idCounter + 1);
+    setInput('');
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSubmit();
-    }
-  };
-
-  const handleToggleCompletion = (id: number) => {
-    setTodos(prevTodos =>
-      prevTodos.map(item =>
-        item.id === id ? { ...item, completed: !item.completed } : item
+  const toggleTodo = (id: number) => {
+    setTodos(
+      todos.map(todo => 
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
       )
     );
   };
 
-  const handleDelete = (id: number) => {
-    setTodos(prevTodos => prevTodos.filter(item => item.id !== id));
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter(todo => todo.id !== id));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      addTodo();
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container mx-auto max-w-md px-4">
-        <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl text-center mb-8">
-          My Todo App
-        </h1>
-        <div className="flex gap-2 mb-6">
-          <Input
-            type="text"
-            value={input}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Enter a todo..."
-            className="flex-1"
-            aria-label="New todo input"
-          />
-          <Button onClick={handleSubmit} aria-label="Add todo">
-            Add Todo
-          </Button>
-        </div>
-        <div className="space-y-3" role="list">
-          {todos.map((item) => (
-            <Card key={item.id} className="p-4" role="listitem">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id={`todo-${item.id}`}
-                    checked={item.completed}
-                    onCheckedChange={() => handleToggleCompletion(item.id)}
-                    aria-label={`Mark ${item.description} as ${item.completed ? 'incomplete' : 'complete'}`}
-                  />
-                  <label
-                    htmlFor={`todo-${item.id}`}
-                    className={`${
-                      item.completed ? 'line-through text-muted-foreground' : 'text-foreground'
-                    } text-sm flex-1 cursor-pointer`}
-                  >
-                    {item.description}
-                  </label>
+    <div className="container mx-auto p-4 max-w-md">
+      <h1 className="text-2xl font-bold mb-6 text-center">My Todo App</h1>
+      
+      <div className="flex gap-2 mb-6">
+        <Input
+          placeholder="Add a new task..."
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          className="flex-grow"
+        />
+        <Button onClick={addTodo}>Add</Button>
+      </div>
+      
+      <div className="space-y-3">
+        {todos.map(todo => (
+          <TaskSuggestion key={todo.id} task={todo.description}>
+            <Card className="p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <Checkbox
+                  checked={todo.completed}
+                  onCheckedChange={() => toggleTodo(todo.id)}
+                  className="mt-1"
+                />
+                <div className="flex-grow">
+                  <p className={`${todo.completed ? 'line-through text-gray-500' : ''}`}>
+                    {todo.description}
+                  </p>
+                  <TaskMeme task={todo.description} />
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => handleDelete(item.id)}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  aria-label={`Delete ${item.description}`}
+                  onClick={() => deleteTodo(todo.id)}
+                  className="h-8 w-8"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </Card>
-          ))}
-        </div>
+          </TaskSuggestion>
+        ))}
+        
+        {todos.length === 0 && (
+          <div className="text-center text-gray-500 p-4">
+            No tasks yet. Add one above!
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default App
+export default App;
